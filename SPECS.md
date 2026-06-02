@@ -126,8 +126,8 @@ photos measure 2×2 in when printed at 100% scale.
   app — no separate service, and any secrets are read via `src/env.mjs`.
 - **Responsive & touch-friendly:** the crop, sliders, and color picker must work
   with touch on mobile.
-- **i18n:** all user-facing strings go through `next-intl` message files
-  (`messages/{locale}.json`), matching the existing setup.
+- **Single locale (English):** the app is English-only — no i18n/next-intl.
+  UI strings live inline in the components.
 - **Performance:** full-resolution processing happens off the main thread (Web
   Worker / OffscreenCanvas) so the UI stays responsive on large photos.
 - **Accessibility:** controls are keyboard-operable and labeled.

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Started from the `next-starter` boilerplate (Michał Skolak's template), then stripped down to a public, no-auth app. **Auth (NextAuth), Stripe, and the database (Drizzle/Neon) have all been removed** — there are no users, sessions, payments, or DB. The intended product per the repo name is a passport-picture resizer, but no domain code exists yet — treat the current `src/` as scaffolding to build the resizer on. The README is stale boilerplate from the original template; trust this file and the code over it.
+Started from the `next-starter` boilerplate, then stripped to a public, no-auth, **single-locale** app and built into a passport-picture resizer. **Removed:** auth (NextAuth), Stripe, the database (Drizzle/Neon), and i18n (next-intl). There are no users, sessions, payments, DB, locales, or middleware. The README is stale boilerplate from the original template; trust this file and the code over it.
+
+The app is a fully client-side image editor: upload a photo → pick a country preset → crop/pan/zoom → adjust brightness/contrast/sharpness → optionally remove & replace the background → export JPEG/PNG/PDF or a print sheet. See `SPECS.md` for the product requirements.
 
 ## Commands
 
@@ -31,7 +33,13 @@ The CI gate (`.github/workflows/lint.yml`) runs `lint`, `typecheck`, `format:che
 
 Next.js 15 App Router, React 19, TypeScript (strict), Tailwind CSS 4, shadcn/ui ("new-york" style, RSC enabled).
 
-- **i18n is foundational.** All pages live under `src/app/[locale]/`. Locales are defined in `src/i18n/routing.ts` (`en`, `pl`; default `en`). `src/middleware.ts` wraps `next-intl` middleware and rewrites all non-API/non-asset routes through the locale segment. UI strings are in `messages/{locale}.json` and loaded per-request in `src/i18n/request.ts`. When adding a page, place it under `[locale]/` and add strings to every file in `messages/`. Use the locale-aware navigation helpers from `src/i18n/navigation.ts`, not raw `next/link`.
+- **The editor** lives in `src/components/editor/`. `editor.tsx` is the client orchestrator holding all state (loaded image, preset, crop, adjustments, removed-background foreground, bg color); the sub-components (`upload-dropzone`, `country-select`, `crop-stage`, `adjustment-controls`, `background-controls`, `export-controls`) are presentational and receive state + callbacks. The page (`src/app/page.tsx`) just renders `<Editor />`.
+
+- **Image pipeline** lives in `src/lib/image/`. Crop offsets are stored in the preset's **output-pixel space** (`types.ts`), so `geometry.ts#computeSourceRect` produces identical framing for both the small preview canvas and the full-size export canvas — `render.ts#renderToCanvas` is shared by both. `buildSourceCanvas` composites the cut-out foreground over the chosen flat color when the background is removed. `adjustments.ts` applies brightness/contrast via the canvas `filter` and sharpen via a 3×3 convolution. `export.ts` handles JPEG/PNG/single-PDF/A4-sheet-PDF/print. Background removal (`background.ts`) lazy-imports `@imgly/background-removal` and runs in-browser (photo never leaves the device).
+
+- **Country presets** are the single source of truth in `src/lib/passport-presets.ts`. Each stores physical mm + DPI; pixel dimensions are derived (`presetPx`) so they can't drift. Adding a country = appending one entry.
+
+- **Single locale (English).** i18n was removed — UI strings are inline in the components, the app has no `[locale]` segment, and there is no `src/middleware.ts`. Don't reintroduce next-intl unless asked.
 
 - **No auth / payments / database.** These were removed. There is no `src/lib/auth.ts`, `src/lib/stripe.ts`, `src/lib/schema.ts`, `src/actions/`, or `src/app/api/` — don't reintroduce them unless the feature genuinely needs a backend. The app is fully static/client-rendered today.
 
