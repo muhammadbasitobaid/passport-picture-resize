@@ -1,8 +1,8 @@
 import { Adjustments } from "./types";
 
-/** CSS canvas filter string for brightness/contrast (applied during drawImage). */
+/** CSS canvas filter for brightness/contrast/saturation (applied during drawImage). */
 export const filterString = (adj: Adjustments) =>
-  `brightness(${adj.brightness}%) contrast(${adj.contrast}%)`;
+  `brightness(${adj.brightness}%) contrast(${adj.contrast}%) saturate(${adj.saturation}%)`;
 
 /**
  * In-place unsharp-style sharpen using a 3×3 convolution, blended by `amount`

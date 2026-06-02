@@ -3,7 +3,6 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { fonts } from "@/lib/fonts";
 import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
@@ -45,10 +44,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans", fonts)}>
-        <ThemeProvider attribute="class">
-          {children}
-          <ThemeSwitcher className="fixed right-5 bottom-5 z-10" />
-        </ThemeProvider>
+        <ThemeProvider attribute="class">{children}</ThemeProvider>
       </body>
     </html>
   );

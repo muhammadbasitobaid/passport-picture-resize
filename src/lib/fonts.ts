@@ -1,15 +1,16 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 
-const fontSans = Inter({
+const fontSans = Hanken_Grotesk({
   subsets: ["latin"],
   variable: "--font-sans",
   fallback: ["system-ui", "arial"],
 });
 
-const fontMono = JetBrains_Mono({
+const fontDisplay = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-mono",
+  weight: ["500", "700", "800"],
+  variable: "--font-display",
   fallback: ["system-ui", "arial"],
 });
 
-export const fonts = [fontSans.variable, fontMono.variable];
+export const fonts = [fontSans.variable, fontDisplay.variable];

@@ -73,20 +73,24 @@ export const sheetLayout = (preset: PassportPreset) => {
   return { cols, rows, count: cols * rows };
 };
 
-/** Download an A4 PDF tiled with as many copies as fit. */
+/** Download an A4 PDF tiled with up to `copies` photos (capped at what fits). */
 export const downloadSheetPdf = (
   canvas: HTMLCanvasElement,
   preset: PassportPreset,
+  copies?: number,
 ) => {
   const data = canvas.toDataURL("image/jpeg", 0.95);
-  const { cols, rows } = sheetLayout(preset);
+  const { cols, rows, count } = sheetLayout(preset);
+  const limit = Math.min(copies ?? count, count);
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
+  let n = 0;
+  for (let r = 0; r < rows && n < limit; r++) {
+    for (let c = 0; c < cols && n < limit; c++) {
       const x = A4.margin + c * (preset.widthMm + A4.gap);
       const y = A4.margin + r * (preset.heightMm + A4.gap);
       pdf.addImage(data, "JPEG", x, y, preset.widthMm, preset.heightMm);
+      n++;
     }
   }
   pdf.save(buildFilename(preset, "sheet.pdf"));
@@ -99,14 +103,16 @@ export const downloadSheetPdf = (
 export const printSheet = (
   canvas: HTMLCanvasElement,
   preset: PassportPreset,
+  copies?: number,
 ) => {
   const data = canvas.toDataURL("image/jpeg", 0.95);
   const { count } = sheetLayout(preset);
+  const limit = Math.min(copies ?? count, count);
   const win = window.open("", "_blank");
   if (!win) return false;
 
   const imgs = Array.from(
-    { length: count },
+    { length: limit },
     () =>
       `<img src="${data}" style="width:${preset.widthMm}mm;height:${preset.heightMm}mm;" />`,
   ).join("");

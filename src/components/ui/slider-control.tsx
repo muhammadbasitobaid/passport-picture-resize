@@ -1,5 +1,7 @@
 "use client";
 
+import { LucideIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 type SliderControlProps = {
@@ -8,6 +10,8 @@ type SliderControlProps = {
   min: number;
   max: number;
   step?: number;
+  /** Optional leading icon (Knob style). */
+  icon?: LucideIcon;
   /** Displayed next to the label, e.g. the numeric value or a unit. */
   display?: string;
   onChange: (value: number) => void;
@@ -24,16 +28,18 @@ export const SliderControl = ({
   min,
   max,
   step = 1,
+  icon: Icon,
   display,
   onChange,
   className,
 }: SliderControlProps) => (
   <label className={cn("block", className)}>
-    <span className="mb-1.5 flex items-center justify-between text-sm font-medium">
+    <span className="text-muted-foreground mb-2 flex items-center gap-1.5 text-[13px] font-semibold">
+      {Icon && <Icon size={14} className="text-primary" />}
       {label}
-      <span className="text-muted-foreground tabular-nums">
-        {display ?? value}
-      </span>
+      {display !== undefined && (
+        <span className="ml-auto tabular-nums">{display}</span>
+      )}
     </span>
     <input
       type="range"

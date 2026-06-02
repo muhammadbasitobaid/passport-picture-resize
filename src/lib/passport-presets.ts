@@ -9,101 +9,143 @@
  * against the issuing authority before relying on them for a real application.
  */
 
+export const DPI = 300;
+
 export type PassportPreset = {
-  /** Stable id used in URLs / filenames, e.g. "de". */
+  /** Stable id used in URLs / filenames. */
   id: string;
-  /** ISO 3166-1 alpha-2 code, used in the exported filename. */
+  /** ISO 3166-1 alpha-2 (or region) code, used in the exported filename. */
   countryCode: string;
+  /** Emoji flag shown in the document picker. */
+  flag: string;
   /** Human-readable label (proper noun — intentionally not translated). */
   name: string;
   widthMm: number;
   heightMm: number;
-  dpi: number;
-  /**
-   * Head height (crown to chin) as a fraction of the photo height, [min, max].
-   * Drives the face-position guide overlay. Falls back to a generic range.
-   */
-  headHeightPct?: [number, number];
+  /** Head height (crown to chin) requirement, in millimetres. */
+  headMinMm: number;
+  headMaxMm: number;
 };
 
 export const PASSPORT_PRESETS: PassportPreset[] = [
   {
-    id: "us",
+    id: "us-pass",
     countryCode: "US",
-    name: "United States (2×2 in)",
-    widthMm: 50.8,
-    heightMm: 50.8,
-    dpi: 300,
-    headHeightPct: [0.5, 0.69],
+    flag: "🇺🇸",
+    name: "US Passport",
+    widthMm: 51,
+    heightMm: 51,
+    headMinMm: 25,
+    headMaxMm: 35,
   },
   {
-    id: "eu",
-    countryCode: "EU",
-    name: "EU / Schengen (35×45 mm)",
-    widthMm: 35,
-    heightMm: 45,
-    dpi: 300,
-    headHeightPct: [0.7, 0.8],
-  },
-  {
-    id: "gb",
+    id: "uk",
     countryCode: "GB",
-    name: "United Kingdom (35×45 mm)",
+    flag: "🇬🇧",
+    name: "UK Passport",
     widthMm: 35,
     heightMm: 45,
-    dpi: 300,
-    headHeightPct: [0.64, 0.76],
+    headMinMm: 29,
+    headMaxMm: 34,
   },
   {
-    id: "in",
-    countryCode: "IN",
-    name: "India (35×45 mm)",
-    widthMm: 35,
-    heightMm: 45,
-    dpi: 300,
-    headHeightPct: [0.62, 0.74],
-  },
-  {
-    id: "ca",
+    id: "cdn-pass",
     countryCode: "CA",
-    name: "Canada (50×70 mm)",
+    flag: "🇨🇦",
+    name: "Canada Passport",
     widthMm: 50,
     heightMm: 70,
-    dpi: 300,
-    headHeightPct: [0.44, 0.51],
+    headMinMm: 31,
+    headMaxMm: 36,
   },
   {
-    id: "au",
-    countryCode: "AU",
-    name: "Australia (35×45 mm)",
+    id: "schengen",
+    countryCode: "EU",
+    flag: "🇪🇺",
+    name: "Schengen / Italy",
     widthMm: 35,
     heightMm: 45,
-    dpi: 300,
-    headHeightPct: [0.66, 0.78],
+    headMinMm: 32,
+    headMaxMm: 36,
   },
   {
-    id: "cn",
+    id: "ireland",
+    countryCode: "IE",
+    flag: "🇮🇪",
+    name: "Ireland",
+    widthMm: 35,
+    heightMm: 45,
+    headMinMm: 30,
+    headMaxMm: 36,
+  },
+  {
+    id: "india",
+    countryCode: "IN",
+    flag: "🇮🇳",
+    name: "India / OCI",
+    widthMm: 51,
+    heightMm: 51,
+    headMinMm: 25,
+    headMaxMm: 35,
+  },
+  {
+    id: "china",
     countryCode: "CN",
-    name: "China (33×48 mm)",
+    flag: "🇨🇳",
+    name: "China Visa",
     widthMm: 33,
     heightMm: 48,
-    dpi: 300,
-    headHeightPct: [0.62, 0.74],
+    headMinMm: 28,
+    headMaxMm: 33,
+  },
+  {
+    id: "hk",
+    countryCode: "HK",
+    flag: "🇭🇰",
+    name: "Hong Kong",
+    widthMm: 40,
+    heightMm: 50,
+    headMinMm: 28,
+    headMaxMm: 33,
+  },
+  {
+    id: "uae",
+    countryCode: "AE",
+    flag: "🇦🇪",
+    name: "UAE Visa",
+    widthMm: 43,
+    heightMm: 55,
+    headMinMm: 28,
+    headMaxMm: 38,
+  },
+  {
+    id: "malaysia",
+    countryCode: "MY",
+    flag: "🇲🇾",
+    name: "Malaysia",
+    widthMm: 35,
+    heightMm: 50,
+    headMinMm: 25,
+    headMaxMm: 35,
   },
 ];
 
-export const DEFAULT_PRESET_ID = "us";
+export const DEFAULT_PRESET_ID = "us-pass";
 
-const mmToPx = (mm: number, dpi: number) => Math.round((mm / 25.4) * dpi);
+const mmToPx = (mm: number, dpi = DPI) => Math.round((mm / 25.4) * dpi);
 
 /** Exact output pixel dimensions for a preset. */
 export const presetPx = (preset: PassportPreset) => ({
-  width: mmToPx(preset.widthMm, preset.dpi),
-  height: mmToPx(preset.heightMm, preset.dpi),
+  width: mmToPx(preset.widthMm),
+  height: mmToPx(preset.heightMm),
 });
 
 export const presetAspect = (preset: PassportPreset) =>
   preset.widthMm / preset.heightMm;
+
+/** Average head height as a fraction of the photo height (for guide overlays). */
+export const headFraction = (preset: PassportPreset) =>
+  (preset.headMinMm + preset.headMaxMm) / 2 / preset.heightMm;
 
 export const getPreset = (id: string): PassportPreset =>
   PASSPORT_PRESETS.find((p) => p.id === id) ??
