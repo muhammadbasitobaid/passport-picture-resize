@@ -1,8 +1,6 @@
 {
   "home": {
-    "signIn": "Sign in",
-    "signOut": "Sign out",
-    "subtitle": "A Next.js starter template, packed with features like TypeScript, Tailwind CSS, Next-auth, Eslint, Stripe, testing tools and more. Jumpstart your project with efficiency and style.",
-    "getStartedButton": "Get started"
+    "title": "Passport Picture Resize",
+    "subtitle": "Resize and crop your photos to standard passport and ID dimensions right in your browser."
   }
 }
