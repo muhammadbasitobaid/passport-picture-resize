@@ -14,4 +14,7 @@ export const env = createEnv({
     GOOGLE_SITE_VERIFICATION_ID: process.env.GOOGLE_SITE_VERIFICATION_ID,
     BG_REMOVAL_URL: process.env.BG_REMOVAL_URL,
   },
+  // Treat empty strings (e.g. an unset `APP_URL` secret passed as "") as
+  // undefined so optional vars don't fail `.url()` validation in CI.
+  emptyStringAsUndefined: true,
 });
