@@ -6,23 +6,15 @@ import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { Photo } from "./types";
+import { useEditorStore } from "./store";
 
-type PhotoStripProps = {
-  photos: Photo[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-  onFiles: (files: FileList) => void;
-  onRemove: (id: string) => void;
-};
+export const PhotoStrip = () => {
+  const photos = useEditorStore((s) => s.photos);
+  const activeId = useEditorStore((s) => s.activeId);
+  const setActive = useEditorStore((s) => s.setActive);
+  const addFiles = useEditorStore((s) => s.addFiles);
+  const removePhoto = useEditorStore((s) => s.removePhoto);
 
-export const PhotoStrip = ({
-  photos,
-  activeId,
-  onSelect,
-  onFiles,
-  onRemove,
-}: PhotoStripProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
 
@@ -39,7 +31,7 @@ export const PhotoStrip = ({
         onDrop={(e) => {
           e.preventDefault();
           setDrag(false);
-          onFiles(e.dataTransfer.files);
+          addFiles(e.dataTransfer.files);
         }}
         className={cn(
           "mb-3 flex flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed py-5 transition-colors",
@@ -59,7 +51,7 @@ export const PhotoStrip = ({
             <button
               key={p.id}
               type="button"
-              onClick={() => onSelect(p.id)}
+              onClick={() => setActive(p.id)}
               className={cn(
                 "relative shrink-0 overflow-hidden rounded-xl",
                 on && "ring-primary shadow-md ring-[3px]",
@@ -90,7 +82,7 @@ export const PhotoStrip = ({
         <Button
           variant="ghost"
           className="bg-coral-soft text-coral mt-2 gap-1.5 hover:opacity-90"
-          onClick={() => onRemove(activeId)}
+          onClick={() => removePhoto(activeId)}
         >
           <Icons.trash size={14} /> Remove
         </Button>
@@ -102,7 +94,7 @@ export const PhotoStrip = ({
         accept="image/jpeg,image/png"
         multiple
         hidden
-        onChange={(e) => e.target.files && onFiles(e.target.files)}
+        onChange={(e) => e.target.files && addFiles(e.target.files)}
       />
     </aside>
   );

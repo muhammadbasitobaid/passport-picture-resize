@@ -1,136 +1,136 @@
-<a href="https://next-starter-skolaczk.vercel.app/">
-<img src="/public/opengraph-image.jpg" alt="thumbnail">
-</a>
-<p align="center">
-  <a href="#-features"><strong>Features</strong></a> ·
-  <a href="#-deployment"><strong>Deployment</strong></a> ·
-  <a href="#-getting-started"><strong>Getting started</strong></a> ·
-  <a href="#%EF%B8%8F-scripts-overview"><strong>Scripts overview</strong></a> ·
-  <a href="#-contribution"><strong>Contribution</strong></a> ·
-  <a href="#%EF%B8%8F-support"><strong>Support</strong></a>
-</p>
+# Passport Picture Resizer
 
-## 🎉 Features
-- 🚀 Next.js 15 (App router)
-- ⚛️ React 19
-- 📘 Typescript
-- 🎨 Tailwind CSS 4 - Class sorting, merging and linting
-- 🛠️ Shadcn/ui - Customizable UI components
-- 💵 Stripe - Payment handler
-- 🔒 Next-auth - Easy authentication library for Next.js (GitHub provider)
-- 🛡️ Drizzle - ORM for node.js
-- 🔍 Zod - Schema validation library
-- 🧪 Jest & React Testing Library - Configured for unit testing
-- 🎭 Playwright - Configured for e2e testing
-- 📈 Absolute Import & Path Alias - Import components using `@/` prefix
-- 💅 Prettier - Code formatter
-- 🧹 Eslint - Code linting tool
-- 🐶 Husky & Lint Staged - Run scripts on your staged files before they are committed
-- 🔹 Icons - From Lucide
-- 🌑 Dark mode - With next-themes
-- 📝 Commitlint - Lint your git commits
-- 🤖 Github actions - Lint your code on PR
-- ⚙️ T3-env - Manage your environment variables
-- 🗺️ Sitemap & robots.txt
-- 💯 Perfect Lighthouse score
-- 💾 Neon database
-- 🌐 I18n with next-intl
+A fully client-side web app that turns an ordinary photo into a compliant
+passport / ID photo: **upload → pick a country preset → crop / pan / zoom →
+adjust brightness / contrast / saturation / sharpness → optionally remove &
+replace the background → export JPEG / PNG / PDF or a print sheet.**
 
-## 🚀 Deployment
-Easily deploy your Next.js app with <a href="https://vercel.com/">Vercel</a> by clicking the button below:
+This repository contains **two instances**:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Skolaczk/next-starter)
+| Instance | Path | Stack | Purpose |
+|---|---|---|---|
+| **Web app** | repo root | Next.js 15 · React 19 · TypeScript · Tailwind 4 · shadcn/ui | The editor UI and image pipeline (runs in the browser) |
+| **Background-removal service** | `services/bg-removal` | Python · FastAPI · rembg (BiRefNet-lite) | CPU model that produces the cut-out for the "Remove background" feature |
 
-## 🎯 Getting started
-### 1. Clone this template in one of three ways
+The web app talks to the service through the Next.js route handler at
+`src/app/api/remove-bg/route.ts`. Everything else in the editor (crop, adjust,
+export) is pure client-side and works without the service.
 
-1. Using this repository as template
+> There is **no auth, database, payments, or i18n** — these were removed from
+> the original starter template. See `CLAUDE.md` for the authoritative
+> architecture notes.
 
-   ![use-this-template-button](https://github.com/Skolaczk/next-starter/assets/76774237/f25c9a29-41de-4865-aa38-c032b9346169)
+---
 
-2. Using `create-next-app`
+## Prerequisites
 
-   ```bash
-   npx create-next-app -e https://github.com/Skolaczk/next-starter my-project-name
-   ```
+- **Node.js 18.18+** (or 20+) and **npm** — for the web app.
+- **Python 3.10+** — only for the background-removal service (or use Docker).
+- **Docker** — optional, an alternative way to run the service.
 
-3. Using `git clone`
+---
 
-   ```bash
-   git clone https://github.com/Skolaczk/next-starter my-project-name
-   ```
-### 2. Install dependencies
+## 1. Web app setup (repo root)
 
 ```bash
+# 1. Install dependencies
 npm install
-```
 
-### 3. Set up environment variables
-Create `.env` file and set env variables from `.env.example` file.
+# 2. (optional) Create a local .env — every variable is optional
+cp .env.example .env
 
-### 4. Prepare husky
-It is required if you want husky to work
-
-```bash
-npm run prepare
-```
-
-### 5. Run the dev server
-
-You can start the server using this command:
-
-```bash
+# 3. Run the dev server (Turbopack) on http://localhost:5173
 npm run dev
 ```
 
-and open http://localhost:3000/ to see this app.
+Open **http://localhost:5173**. The editor is fully usable immediately; only the
+**Remove background** toggle requires the service below to be running.
 
-## 📁 Project structure
+### Environment variables
+
+All optional, validated in `src/env.mjs` (`@t3-oss/env-nextjs` + Zod). The app
+runs with no `.env` at all.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_URL` | `http://localhost:3000` | Metadata base URL & sitemap |
+| `GOOGLE_SITE_VERIFICATION_ID` | – | Google Search Console (optional) |
+| `BG_REMOVAL_URL` | `http://localhost:7001` | Base URL of the background-removal service |
+
+> Never read `process.env` directly in app code — import `env` from `@/env.mjs`,
+> and add any new variable to **both** `src/env.mjs` and `.env.example`.
+
+---
+
+## 2. Background-removal service setup (`services/bg-removal`)
+
+Required for the "Remove background" feature. Full details in
+[`services/bg-removal/README.md`](services/bg-removal/README.md).
+
+```bash
+cd services/bg-removal
+
+# Option A — local Python (recommended for dev)
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python download_model.py          # downloads the BiRefNet-lite model (~214 MB)
+uvicorn app.main:app --reload --port 7001
+
+# Option B — Docker (model is baked into the image)
+docker build -t bg-removal .
+docker run --rm -p 7001:7001 bg-removal
+```
+
+The service listens on **http://localhost:7001** (`GET /health`,
+`POST /remove`). The web app's `BG_REMOVAL_URL` should point at it.
+
+### Running both together (typical dev loop)
+
+```bash
+# terminal 1 — background-removal service
+cd services/bg-removal && source .venv/bin/activate && uvicorn app.main:app --port 7001
+
+# terminal 2 — web app
+npm run dev
+```
+
+---
+
+## Scripts (web app)
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Dev server (Turbopack) on `:5173` |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` / `lint:fix` | ESLint |
+| `npm run format:check` / `format:write` | Prettier |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run test` / `test:watch` | Jest unit tests |
+| `npm run e2e` / `e2e:ui` | Playwright e2e tests |
+
+CI (`.github/workflows/lint.yml`) runs lint, typecheck, format:check and test on
+PRs to `main`; Playwright runs in a separate workflow.
+
+---
+
+## Project structure
 
 ```bash
 .
-├── .github                         # GitHub folder
-├── .husky                          # Husky configuration
-├── prisma                          # Prisma schema and migrations
-├── public                          # Public assets folder
-└── src
-    ├── __tests__                   # Unit and e2e tests
-    ├── actions                     # Server actions
-    ├── app                         # Next JS App (App Router)
-    ├── components                  # React components
-    ├── lib                         # Functions and utilities
-    ├── styles                      # Styles folder
-    └── env.mjs                     # Env variables config file
+├── .github/workflows         # CI: lint/typecheck/format/test + playwright
+├── docs                      # estimation / planning docs
+├── public                    # static assets
+├── services
+│   └── bg-removal            # BiRefNet-lite background-removal microservice (Python)
+├── src
+│   ├── __tests__             # unit (jsdom) + e2e (playwright)
+│   ├── app                   # App Router: page, layout, api/remove-bg
+│   ├── components            # editor/ (UI) + ui/ (shadcn)
+│   ├── lib                   # image pipeline, passport presets, utils
+│   ├── styles                # globals.css (design tokens)
+│   └── env.mjs               # env validation
+├── estimate.md               # project quote
+└── CLAUDE.md                 # architecture notes (source of truth)
 ```
-
-## ⚙️ Scripts overview
-The following scripts are available in the `package.json`:
-- `dev`: Run development server
-- `build`: Build the app
-- `start`: Run production server
-- `preview`: Run `build` and `start` commands together
-- `lint`: Lint the code using Eslint
-- `lint:fix`: Fix linting errors
-- `format:check`: Checks the code for proper formatting
-- `format:write`: Fix formatting issues
-- `typecheck`: Type-check TypeScript without emitting files
-- `test`: Run unit tests
-- `test:watch`: Run unit tests in watch mode
-- `e2e`: Run end-to-end tests
-- `e2e:ui`: Run end-to-end tests with UI
-- `postbuild`: Generate sitemap
-- `prepare`: Install Husky for managing Git hooks
-
-## 🤝 Contribution
-To contribute, please follow these steps:
-1. Fork the repository.
-2. Create a new branch.
-3. Make your changes, and commit them.
-4. Push your changes to the forked repository.
-5. Create a pull request.
-
-## ❤️ Support
-
-If you liked the project, I will appreciate if you leave a star. 🌟😊
-
-Made by <a href="https://michalskolak.netlify.app/">Michał Skolak</a> # passport-picture-resize

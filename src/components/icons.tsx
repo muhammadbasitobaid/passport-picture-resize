@@ -1,4 +1,5 @@
 import {
+  Ban,
   Camera,
   Check,
   Download,
@@ -42,4 +43,5 @@ export const Icons = {
   zoom: ZoomIn,
   move: MoveVertical,
   layers: Layers,
+  none: Ban,
 };
