@@ -1,6 +1,7 @@
 import { PassportPreset, presetPx } from "@/lib/passport-presets";
 
 import { filterString, sharpen } from "./adjustments";
+import { bgLog } from "./debug";
 import { computeSourceRect } from "./geometry";
 import { Adjustments, CropState, DrawSource } from "./types";
 
@@ -20,11 +21,18 @@ export const buildSourceCanvas = (
   canvas.height = base.height;
   const ctx = canvas.getContext("2d")!;
 
-  if (foreground && bgColor) {
+  const composited = !!(foreground && bgColor);
+  if (composited) {
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   ctx.drawImage(base, 0, 0);
+  bgLog("buildSourceCanvas", {
+    composited,
+    bgColor: composited ? bgColor : null,
+    drawingForeground: foreground === base,
+    size: `${canvas.width}×${canvas.height}`,
+  });
   return canvas;
 };
 
@@ -39,6 +47,7 @@ export const renderToCanvas = (
   preset: PassportPreset,
   crop: CropState,
   adj: Adjustments,
+  withSharpen = true,
 ) => {
   const { width: outW, height: outH } = presetPx(preset);
   const rect = computeSourceRect(source.width, source.height, outW, outH, crop);
@@ -60,7 +69,7 @@ export const renderToCanvas = (
   );
   ctx.filter = "none";
 
-  sharpen(ctx, target.width, target.height, adj.sharpness);
+  if (withSharpen) sharpen(ctx, target.width, target.height, adj.sharpness);
 };
 
 /** Produce the final export-resolution canvas at the preset's exact pixels. */
